@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('./models/User.js')
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const app = express();
 
@@ -11,6 +12,7 @@ const bcryptSalt = bcrypt.genSaltSync(12);
 const jwtSecret = 'wamsfivua9ogF*9phtQ78q39i7rhabfu;ILEKHYgPE9)(3jt8';
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL);
@@ -42,9 +44,9 @@ app.post('/login', async (req, res) => {
     if (userData) {
         const passOk = bcrypt.compareSync(password, userData.password)
         if (passOk) {
-            jwt.sign({email: userData.email, id: userData.id}, jwtSecret, {}, (err, token) => {
+            jwt.sign({email: userData.email, id: userData._id}, jwtSecret, {}, (err, token) => {
                 if (err) throw err;
-                res.cookie('token', token).json('pass ok')
+                res.cookie('token', token).json(userData)
             })
             
         }else{
@@ -54,5 +56,17 @@ app.post('/login', async (req, res) => {
         res.json('not found');
     }
 })
+
+app.get('/profile', (req, res) => {
+    const {token} = req.cookies;
+    if (token) {
+        jwt.verify(token, jwtSecret, {}, async (err, userCookie) => {
+            if (err) throw err;
+            const {name, email, _id} = await User.findById(userCookie.id)
+            res.json({name, email, _id});})
+    }else{
+        res.json(null);
+    };    
+});
 
 app.listen(5000);
