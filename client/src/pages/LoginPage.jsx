@@ -1,21 +1,24 @@
 import {Link} from 'react-router-dom';
 import { useState } from 'react';
+import axios from 'axios';
 
-async function handleLoginSubmit(event) {
-    event.preventDefault();
-
-    try {
-        await axios.post('/login', {email, password})
-        alert("Login successful")
-    } catch (e) {
-        alert("Login failed")
-    }
-    
-}
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    async function handleLoginSubmit(event) {
+        event.preventDefault();
+    
+        try {
+            await axios.post('/login', {email, password})
+            alert("Login successful")
+        } catch (e) {
+            alert("Login failed")
+        }
+        
+    }
+
     return (
         <div className="mt-4 grow flex items-center justify-around">
             <div className="mb-64">
