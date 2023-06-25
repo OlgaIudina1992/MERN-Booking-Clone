@@ -7,12 +7,12 @@ export default function Header() {
     return (
         <div>
         <header className='flex justify-between'>
-          <a href='#' className='flex items-center gap-1'>
+          <Link to={'/'} className='flex items-center gap-1'>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
   <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
 </svg>
 <span className='font-bold text-xl'>brbnb</span>
-</a>
+</Link>
 <div className='flex gap-2 border border-gray-500 rounded-full py-2 px-4 shadow-md shadow-gray-500'>
   <div>Anywhere</div>
   <div className='border-l border-gray-300'></div>
@@ -25,7 +25,7 @@ export default function Header() {
 </svg>
   </button>
 </div>
-<Link to={'/login'} className='flex items-center gap-2 border border-gray-600 rounded-full py-2 px-4'>
+<Link to={user? '/account' : '/login'} className='flex items-center gap-2 border border-gray-600 rounded-full py-2 px-4'>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
 </svg>
