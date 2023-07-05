@@ -1,51 +1,40 @@
-import {Link, Navigate} from 'react-router-dom';
-import { useState } from 'react';
-import axios from 'axios';
-import { useContext } from 'react';
-import { UserContext } from '../userContext';
+import { useContext, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
+export default function Login() {
+    const [credentials, setCredentials] = useState({
+        username: undefined,
+        password: undefined,
+    });
+    const {loading, error, dispatch} = useContext(AuthContext);
+    const navigate = useNavigate();
 
-export default function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [redirect, setRedirect] = useState(false);
-    const {setUser} = useContext(UserContext);
-
-    async function handleLoginSubmit(event) {
-        event.preventDefault();
-    
-        try {
-            const {data} = await axios.post('/login', {email, password});
-            setUser(data);
-            alert("Login successful");
-            setRedirect(true);
-        } catch (e) {
-            alert("Login failed");
-        }        
+    const handleChange = (event) => {
+        setCredentials(prev => ({...prev, [event.target.id]: event.target.value}))
     }
-
-    if (redirect) {
-        return <Navigate to={'/'} />
+    const handleLogin = async (event) => {
+        event.preventDefault()
+        dispatch({type: "LOGIN_START"})
+        try {
+            const res = await axios.post("http://localhost:5000/api/auth/login", credentials)
+            dispatch({type: "LOGIN_SUCCESS", payload: res.data})
+            navigate("/")
+        }catch(err){
+            dispatch({type: "LOGIN_FAILURE", payload: err.response.data})
+        }
     }
 
     return (
-        <div className="mt-4 grow flex items-center justify-around">
-            <div className="mb-64">
-                <h1 className="text-4xl text-center p-2 mb-4">Login</h1>
-                <form className="max-w-md mx-auto border" onSubmit={handleLoginSubmit}>
-                    <input type="email" placeholder="your email here" 
-                    value={email} 
-                    onChange={event => setEmail(event.target.value)} />
-                    <input type="password" placeholder="your password here" 
-                    value={password} 
-                    onChange={event => setPassword(event.target.value)}/>
-                    <button className="primary">Login</button>
-                    <div className="text-center py-2 text-gray-500">
-                        Don't have an account?                        
-                        <Link className='underline text-black' to={'/register'}> Click here to register!</Link>
-                    </div>
-                </form>
+        <div className="bg-primary p-28 gap-2 flex items-center justify-center w-3/5 h-2/5 mt-20 mx-80  rounded-full">
+            <div className="flex flex-col w-2/5 h-2/5 mt-12">
+            <h1 className="primary text-white text-center mb-2">Login</h1>
+                <input type="text" placeholder="username" id="username" onChange={handleChange} />
+                <input type="password" placeholder="password" id="password" onChange={handleChange} />
+                <button disabled={loading} onClick={handleLogin} className="primary">Login</button>
+                {error && <span className="text-white font-bold">{error.message}</span>}
             </div>
         </div>
-    );
+    )
 }

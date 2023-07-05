@@ -1,76 +1,53 @@
-const express = require('express');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const User = require('./models/User.js')
-const cookieParser = require('cookie-parser');
-require('dotenv').config();
+import express from "express";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import authRoute from "./routes/auth.js";
+import usersRoute from "./routes/users.js";
+import hotelsRoute from "./routes/hotels.js";
+import roomsRoute from "./routes/rooms.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
 const app = express();
+dotenv.config();
 
-const bcryptSalt = bcrypt.genSaltSync(12);
-const jwtSecret = 'wamsfivua9ogF*9phtQ78q39i7rhabfu;ILEKHYgPE9)(3jt8';
+const connect = async () => {
+try {
+    await mongoose.connect(process.env.MONGO);
+    console.log("Connected to mdb")
+    } catch (error) {
+        throw error;
+    }
+};
 
-app.use(express.json());
-app.use(cookieParser());
+mongoose.connection.on("disconnected", () => {
+    console.log("mdb is unavailable")
+})
+mongoose.connection.on("connected", () => {
+    console.log("mdb is available")
+})
+
 app.use(cors());
+app.use(cookieParser());
+app.use(express.json());
+app.use("/api/auth", authRoute);
+app.use("/api/users", usersRoute);
+app.use("/api/hotels", hotelsRoute);
+app.use("/api/rooms", roomsRoute);
 
-mongoose.connect(process.env.MONGO_URL);
-
-app.get('/test', (req, res) => {
-    res.json('test run');
-});
-
-app.post('/register', async (req, res) => {    
-    const {name, email, password} = req.body;
-
-    try {
-        const userData = await User.create({
-            name,
-            email,
-            password:bcrypt.hashSync(password, bcryptSalt),
-        });
-    
-        res.json({userData});
-    } catch (e) {
-        res.status(422).json(e);
-    }
-    
-});
-
-app.post('/login', async (req, res) => {
-    const {email, password} = req.body;
-    const userData = await User.findOne({email});
-    if (userData) {
-        const passOk = bcrypt.compareSync(password, userData.password)
-        if (passOk) {
-            jwt.sign({email: userData.email, id: userData._id}, jwtSecret, {}, (err, token) => {
-                if (err) throw err;
-                res.cookie('token', token).json(userData)
-            })
-            
-        }else{
-            res.json('password not matching')
-        }
-    }else{
-        res.json('not found');
-    }
+app.use((err, req, res, next) => {
+    const errorStatus = err.status || 500
+    const errorMessage = err.message || "Some error found"
+    return res.status(errorStatus).json({
+        success: false,
+        status: errorStatus,
+        message: errorMessage,
+        stack: err.stack,
+    });
 })
 
-app.get('/profile', (req, res) => {
-    const {token} = req.cookies;
-    if (token) {
-        jwt.verify(token, jwtSecret, {}, async (err, userCookie) => {
-            if (err) throw err;
-            const {name, email, _id} = await User.findById(userCookie.id)
-            res.json({name, email, _id});})
-    }else{
-        res.json(null);
-    };    
+
+app.listen(5000, () => {
+    connect()
+    console.log('Server is active');
 });
-
-app.post('/logout', (req, res) => {
-    res.cookie('token', '').json(true);
-})
-
-app.listen(5000);
